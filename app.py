@@ -1,13 +1,17 @@
 from linkedin import linkedin
 
+
 class Person:
 
-    def __init__(self, id, firstName, lastName):
+    def __init__(self, id, **kwargs):
         self.id = id
-        self.firstName = firstName
-        self.lastName = lastName
+        self.firstName = kwargs.pop('firstName', None)
+        self.lastName = kwargs.pop('lastName', None)
 
-        
+    def _loadhim_(self):
+        profile = li_connection.getProfile(self.id)
+        for k, v in profile.iteritems():
+            setattr(self, k, v)
 
 class LIScraper:
 
@@ -21,6 +25,9 @@ class LIScraper:
 
     def getAuthenticationObj(self):
         return self.authentication
+
+    def getProfile(self, id):
+        return self.application.get_profile(member_id=id)
 
     def getAllConnections(self):
         return self.application.get_connections()['values']
@@ -59,17 +66,17 @@ class LIScraper:
 
                     if foundit:
                         # if it is, append person obj to the list of people we want to return
-                        personObj = {
-                            'firstName': person['firstName'],
-                            'lastName': person['lastName'],
-                            'id': person['id'],
-                            'company': position['company'],
-                            'title': position['title']
-                        }
-                        peopleWeWant.append()
+                        personObj = Person(
+                            id = person['id'],
+                            firstName = person['firstName'],
+                            lastName = person['lastName'],
+                            company = position['company'],
+                            title = position['title']
+                        )
+                        peopleWeWant.append(personObj)
 
 
         return peopleWeWant
 
-
+li_connection=LIScraper()
 
