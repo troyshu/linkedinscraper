@@ -1,11 +1,12 @@
 from linkedin import linkedin
 
+
 class Person:
 
-    def __init__(self, id, firstName, lastName):
+    def __init__(self, id, **kwargs):
         self.id = id
-        self.firstName = firstName
-        self.lastName = lastName
+        self.firstName = kwargs.pop('firstName', None)
+        self.lastName = kwargs.pop('lastName', None)
 
     def addCompany(self, company):
         # company dictionary
@@ -16,10 +17,16 @@ class Person:
 
 
     def __repr__(self):
-        if self.title:
-            return "%s %s %s" % (self.firstName, self.lastName, self.title)
+        if hasattr(self, 'title'):
+            return u"%s %s %s" % (self.firstName, self.lastName, self.title)
                 
-        return "%s %s" % (self.firstName, self.lastName)
+        return u"%s %s" % (self.firstName, self.lastName)
+
+    def _loadhim_(self):
+        profile = li_connection.getProfile(self.id)
+        for k, v in profile.iteritems():
+            setattr(self, k, v)
+
 
 class LIScraper:
 
@@ -33,6 +40,9 @@ class LIScraper:
 
     def getAuthenticationObj(self):
         return self.authentication
+
+    def getProfile(self, id):
+        return self.application.get_profile(member_id=id)
 
     def getAllConnections(self):
         return self.application.get_connections()['values']
@@ -83,17 +93,20 @@ class LIScraper:
                     if foundit:
                         print 'found a potential engineer...'
                         # if it is, append person obj to the list of people we want to return
-                        personObj = Person(person['id'], person['firstName'], person['lastName'])
+                        personObj = Person(person['id'], firstName = person['firstName'], lastName = person['lastName'])
                         personObj.addCompany(position['company'])
-                        personObj.addCompany(position['title'])
-                    
+                        personObj.addTitle(position['title'])
+
                         peopleWeWant.append(personObj)
 
 
         return peopleWeWant
 
 
+
 # troy's test
 test = LIScraper()
-people = test.getConnectionsWithCurrentPosition(['developer'])
-print people
+people = test.getConnectionsWithCurrentPosition(['developer', 'quant', 'software engineer', 'programmer'])
+for person in people:
+    print unicode(person)
+
