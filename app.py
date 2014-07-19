@@ -7,7 +7,19 @@ class Person:
         self.firstName = firstName
         self.lastName = lastName
 
-        
+    def addCompany(self, company):
+        # company dictionary
+        self.company = company
+
+    def addTitle(self, title):
+        self.title = title
+
+
+    def __repr__(self):
+        if self.title:
+            return "%s %s %s" % (self.firstName, self.lastName, self.title)
+                
+        return "%s %s" % (self.firstName, self.lastName)
 
 class LIScraper:
 
@@ -48,28 +60,40 @@ class LIScraper:
         peopleWeWant = []
 
         for person in people:
+            print 'checking positions for %s %s' % (person['firstName'], person['lastName'])
             # some people have private profiles
             if 'private' in person.values():
                 continue
-            positions = person['positions']['values']
+            prepositions = person['positions']
+            # some people don't have positions
+            if prepositions['_total'] == 0:
+                continue
+            else:
+                positions = prepositions['values']
+
             for position in positions:
                 if position['isCurrent']:
+                    # so many edge cases: some positions don't have titles...
+                    if 'title' not in position.keys():
+                        continue
+
                     # check if any of our keywords are in current position title
-                    foundit = self._getKeywordsInText(position['title'], positionKeywords)
+                    foundit = self._getKeywordsInText(position['title'].lower(), positionKeywords)
 
                     if foundit:
+                        print 'found a potential engineer...'
                         # if it is, append person obj to the list of people we want to return
-                        personObj = {
-                            'firstName': person['firstName'],
-                            'lastName': person['lastName'],
-                            'id': person['id'],
-                            'company': position['company'],
-                            'title': position['title']
-                        }
-                        peopleWeWant.append()
+                        personObj = Person(person['id'], person['firstName'], person['lastName'])
+                        personObj.addCompany(position['company'])
+                        personObj.addCompany(position['title'])
+                    
+                        peopleWeWant.append(personObj)
 
 
         return peopleWeWant
 
 
-
+# troy's test
+test = LIScraper()
+people = test.getConnectionsWithCurrentPosition(['developer'])
+print people
